@@ -1,5 +1,6 @@
-def steg_encode():
-    pass
+def steg_encode(img, key):
+    return "stego_image"
+    
 
-def steg_decode():
-    pass
+def steg_decode(img):
+    return "key"

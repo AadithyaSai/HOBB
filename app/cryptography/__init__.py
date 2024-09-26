@@ -1,2 +1,2 @@
-from steg import *
-from encrypt import *
+from .steg import *
+from .encrypt import *
