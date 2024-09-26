@@ -1,4 +1,4 @@
-# Cryptography-Dashboard
+# HOBB
 A unified cryptography platform for steganography and encryption analysis
 
 ### Team Members
