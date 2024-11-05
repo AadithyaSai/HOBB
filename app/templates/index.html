@@ -6,28 +6,70 @@
     <title>HOBB</title>
   </head>
   <body>
-    <h1>Encrypt</h1>
-    <form id="encrypt-form" method="post" enctype="multipart/form-data">
-      <label for="text">Text to encrypt</label>
-      <input type="text" name="plaintext" />
-      <br />
-      <label for="image">image for steganography</label>
-      <input type="file" name="image" accept="image/*" />
-      <br />
-      <button type="submit">Encrypt</button>
-    </form>
+    <div>
+      <div>
+        <h1>Encrypt</h1>
+        <form id="encrypt-form" method="post" enctype="multipart/form-data">
+          <label for="text">Text to encrypt</label>
+          <input type="text" name="plaintext" />
+          <br />
+          <label for="image">image for steganography</label>
+          <input type="file" name="image" accept="image/*" />
+          <br />
+          <button type="submit">Encrypt</button>
+        </form>
+        <div>
+          <h3>Encrypted text</h3>
+          <p id="encrypted-text"></p>
+          <h3>Stego-image</h3>
+          <a id="link" download="stego_image.png">Download</a>
+        </div>
+      </div>
+      <div>
+        <h1>Decrypt</h1>
+        <form id="decrypt-form" method="post" enctype="multipart/form-data">
+          <label for="text">Enter ciphered text</label>
+          <input type="text" name="ciphertext" />
+          <br />
+          <label for="image">Enter stego-image</label>
+          <input type="file" name="stego_image" accept="image/*" />
+          <br />
+          <button type="submit">Decrypt</button>
+        </form>
+        <div>
+          <h3>Decrypted text</h3>
+          <p id="decrypted-text"></p>
+        </div>
+      </div>
+    </div>
 
     <script>
-      const form = document.getElementById("encrypt-form");
-      form.addEventListener("submit", async (e) => {
+      const encryptForm = document.getElementById("encrypt-form");
+      encryptForm.addEventListener("submit", async (e) => {
         e.preventDefault();
-        const formData = new FormData(form);
+        const formData = new FormData(encryptForm);
         const response = await fetch("/encrypt", {
           method: "POST",
           body: formData,
         });
         const data = await response.json();
         console.log(data);
+        const link = document.getElementById("link");
+        link.href = "data:image/png;base64," + data.stego_image;
+        document.getElementById("encrypted-text").innerText = data.ciphertext;
+      });
+
+      const decryptForm = document.getElementById("decrypt-form");
+      decryptForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const formData = new FormData(decryptForm);
+        const response = await fetch("/decrypt", {
+          method: "POST",
+          body: formData,
+        });
+        const data = await response.json();
+        console.log(data);
+        document.getElementById("decrypted-text").innerText = data.plaintext;
       });
     </script>
   </body>
