@@ -27,7 +27,7 @@ def steg_decode(img):
 
     # decode lsb
     key_bin = ''
-    for i in range(192):
+    for i in range(192*3):
         key_bin += str(img[i//img.shape[1], i%img.shape[1], 0] & 1)
 
     key = ''
