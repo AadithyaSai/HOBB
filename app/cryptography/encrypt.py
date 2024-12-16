@@ -1,26 +1,64 @@
+import botan3
 import base64
-from Crypto.Cipher import AES
-from Crypto.Random import get_random_bytes
-from Crypto.Util.Padding import pad, unpad
+
+ALGORITHMS = ["AES-128/CBC", "Twofish/CBC", "Serpent/CBC"]
+
+def split_three_ways(text: str) -> tuple[str, str, str]:
+    return (
+        text[:len(text) // 3],
+        text[len(text) // 3:2 * len(text) // 3],
+        text[2 * len(text) // 3:]
+    )
+
+def encrypt_part(algorithm: str, text: str) -> tuple[str, str]:
+    key = botan3.RandomNumberGenerator().get(16)
+    iv = botan3.RandomNumberGenerator().get(16)
+    
+    # Encrypt the text
+    cipher = botan3.SymmetricCipher(algorithm, encrypt=True)
+    cipher.set_key(key)
+    cipher.start(iv)
+    ct_bytes = cipher.finish(text.encode('utf-8'))
+    
+    # Combine IV and ciphertext, and encode as Base64
+    ct = base64.b64encode(iv + ct_bytes).decode('utf-8')
+    key_b64 = base64.b64encode(key).decode('utf-8')
+    
+    return (ct, key_b64)
 
 def encrypt(text: str) -> tuple[str, str]:
-    # Generate a random key
-    key = get_random_bytes(16)
+    parts = split_three_ways(text)
+    
+    cipher = ''
+    key = ''
+    for i in range(3):
+        ct, key_b64 = encrypt_part(ALGORITHMS[i], parts[i])
+        cipher += ct
+        key += key_b64
 
-    # Encrypt the text
-    cipher = AES.new(key, AES.MODE_CBC)
-    ct_bytes = cipher.encrypt(pad(text.encode('utf-8'), AES.block_size))
-    ct = base64.b64encode(cipher.iv + ct_bytes).decode('utf-8')
+    return (cipher, key)
 
-    return (ct, base64.b64encode(key).decode('utf-8'))
+def decrypt_part(algorithm:str, ct: str, key: str) -> str:
+    ct = base64.b64decode(ct.encode('utf-8'))
+    key = base64.b64decode(key.encode('utf-8'))
 
-def decrypt(text: str, key: str) -> str:
-    # Decode the text
-    ct = base64.b64decode(text.encode('utf-8'))
+    iv = ct[:16]  # First 16 bytes are the IV
+    ct_bytes = ct[16:]  # Remaining bytes are the ciphertext
 
     # Decrypt the text
-    iv = ct[:AES.block_size]
-    cipher = AES.new(base64.b64decode(key), AES.MODE_CBC, iv=iv)
-    pt = unpad(cipher.decrypt(ct[AES.block_size:]), AES.block_size)
+    cipher = botan3.SymmetricCipher(algorithm, encrypt=False)
+    cipher.set_key(key)
+    cipher.start(iv)
+    pt_bytes = cipher.finish(ct_bytes)
 
-    return pt.decode('utf-8')
+    return pt_bytes.decode('utf-8')
+
+def decrypt(text: str, key: str) -> str:
+    cts = split_three_ways(text)
+    keys = split_three_ways(key)
+
+    plaintext = ''
+    for i in range(3):
+        plaintext += decrypt_part(ALGORITHMS[i], cts[i], keys[i])
+
+    return plaintext
