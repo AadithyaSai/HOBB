@@ -1,34 +1,55 @@
-from typing import BinaryIO
-
-from fastapi import FastAPI, Request, UploadFile, Form
+from typing import BinaryIO,Optional
+import psycopg2
+from psycopg2.extras import RealDictCursor
+from fastapi import FastAPI, Request, UploadFile, Form, Response, status,HTTPException, Depends
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
+from fastapi.params import Body
 from pydantic import BaseModel
-
-
+from random import randrange
+import time
+from . import models,schemas,utils
+from sqlalchemy.orm import Session
+from .database import engine,SessionLocal, get_db
 from app.cryptography import *
+from .routers import encdec,user
+from fastapi.middleware.cors import CORSMiddleware
+
+models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
-templates = Jinja2Templates(directory="app/templates")
+origins = ["*"]
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+templates = Jinja2Templates(directory="app/templates")
+ 
+app.include_router(encdec.router)
+app.include_router(user.router)
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
+while True:
+    try:
+        conn=psycopg2.connect(host='localhost',database='cryptobase',user='postgres',password='postgres',cursor_factory=RealDictCursor)
+        cursor=conn.cursor()
+        print("Connected to DB")
+        break
+    except Exception as error:
+        print("Connection to db failed")
+        print("Error : ",error)
+        time.sleep(3)
 
-@app.post("/encrypt/")
-async def encrypt_data(image: UploadFile, plaintext: str = Form()) -> dict[str, str]:
-    # Encrypt the text and perform steganography on key
-    encrypted_text, key = encrypt(plaintext)
-    stego_image = steg_encode(image.file, key)
+@app.get("/sqlalchemy")
+def testposts(db:Session = Depends(get_db)):
+    posts=db.query(models.Post).all()
+    return {"status":posts}
 
-    return {"ciphertext":encrypted_text, "stego_image":stego_image}
-
-@app.post("/decrypt/")
-async def decrypt_data(stego_image: UploadFile, ciphertext: str = Form()) -> dict[str, str]:
-    # Perform steganography on key and decrypt the text
-    key = steg_decode(stego_image.file)
-    decrypted_text = decrypt(ciphertext, key)
-
-    return {"plaintext": decrypted_text}
