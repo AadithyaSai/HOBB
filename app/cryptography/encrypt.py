@@ -5,9 +5,9 @@ ALGORITHMS = ["AES-128/CBC", "Twofish/CBC", "Serpent/CBC"]
 
 def split_three_ways(text: str) -> tuple[str, str, str]:
     return (
-        text[:len(text) // 3],
-        text[len(text) // 3:2 * len(text) // 3],
-        text[2 * len(text) // 3:]
+        text[0::3],
+        text[1::3],
+        text[2::3]
     )
 
 def encrypt_part(algorithm: str, text: str) -> tuple[str, str]:
