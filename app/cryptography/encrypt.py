@@ -6,6 +6,12 @@ import os
 from typing import Callable
 
 ENCRYPTION_ALGORITHMS = [AES_encrypt, Twofish_encrypt, Serpent_encrypt]
+DECRYPTION_ALGORITHMS = [AES_decrypt, Twofish_decrypt, Serpent_decrypt]
+
+def divide_evenly(text: str) -> tuple[str, str, str]:
+    n = len(text) // 3
+    return (text[:n], text[n:2*n], text[2*n:])
+
 
 def split_three_ways(text: str) -> tuple[str, str, str]:
     return (
@@ -13,6 +19,13 @@ def split_three_ways(text: str) -> tuple[str, str, str]:
         text[1::3],
         text[2::3]
     )
+
+def join_three_ways(a: str, b: str, c: str) -> str:
+    res = [''] * (len(a) + len(b) + len(c))
+    res[0::3] = a
+    res[1::3] = b
+    res[2::3] = c
+    return ''.join(res)
 
 def encrypt_part(encrypt: Callable[[str, str], str], text: str) -> tuple[str, str]:
     key = os.urandom(16)
@@ -32,7 +45,7 @@ def encrypt(text: str) -> tuple[str, str]:
     cipher = ''
     key = ''
     for i in range(3):
-        ct, key_b64 = encrypt_part(ENCRYPTION_ALGORITHMS[i].encrypt, parts[i])
+        ct, key_b64 = encrypt_part(ENCRYPTION_ALGORITHMS[i], parts[i])
         cipher += ct
         key += key_b64
 
@@ -42,23 +55,16 @@ def decrypt_part(algorithm:str, ct: str, key: str) -> str:
     ct = base64.b64decode(ct.encode('utf-8'))
     key = base64.b64decode(key.encode('utf-8'))
 
-    iv = ct[:16]  # First 16 bytes are the IV
-    ct_bytes = ct[16:]  # Remaining bytes are the ciphertext
-
-    # Decrypt the text
-    cipher = botan3.SymmetricCipher(algorithm, encrypt=False)
-    cipher.set_key(key)
-    cipher.start(iv)
-    pt_bytes = cipher.finish(ct_bytes)
+    pt_bytes = algorithm(key, ct)
 
     return pt_bytes.decode('utf-8')
 
 def decrypt(text: str, key: str) -> str:
-    cts = split_three_ways(text)
-    keys = split_three_ways(key)
+    cts = divide_evenly(text)
+    keys = divide_evenly(key)
 
-    plaintext = ''
+    pts = []
     for i in range(3):
-        plaintext += decrypt_part(ENCRYPTION_ALGORITHMS[i], cts[i], keys[i])
+        pts.append(decrypt_part(DECRYPTION_ALGORITHMS[i], cts[i], keys[i]))
 
-    return plaintext
+    return join_three_ways(*pts)
