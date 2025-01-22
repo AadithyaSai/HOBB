@@ -1,5 +1,5 @@
 from .algorithms.AES import encrypt as AES_encrypt, decrypt as AES_decrypt
-from .algorithms.Twofish import encrypt as Twofish_encrypt, decrypt as Twofish_decrypt
+from .algorithms.Twofish import TFencrypt as Twofish_encrypt, TFdecrypt as Twofish_decrypt
 from .algorithms.Serpent import encrypt as Serpent_encrypt, decrypt as Serpent_decrypt
 import base64
 import os
