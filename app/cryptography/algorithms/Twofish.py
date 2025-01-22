@@ -16,7 +16,6 @@ def unpad(plaintext):
     Removes a PKCS#7 padding, returning the unpadded text and ensuring the
     padding was correct.
     """
-    # FIXME: Some error when larger blocks provided
     padding_len = plaintext[-1]
     assert padding_len > 0
     message, padding = plaintext[:-padding_len], plaintext[-padding_len:]
@@ -76,11 +75,12 @@ class Twofish:
         prev = struct.unpack("<4L", iv)
         while block:
             a, b, c, d = struct.unpack("<4L", block[:16])
+            temp1 = [a, b, c, d]
             temp = [a, b, c, d]
             decryptHelper(self.context, temp)
-            temp1 = xor_bytes(temp, prev)
-            plaintext += struct.pack("<4L", *temp1)
-            prev = temp
+            temp = xor_bytes(temp, prev)
+            prev = temp1
+            plaintext += struct.pack("<4L", *temp)
             block = block[16:]
             
         return unpad(plaintext)
@@ -91,14 +91,14 @@ class Twofish:
         block = pad(block)
 
         ciphertext = b''
-        
+
         prev = struct.unpack("<4L", iv)
         while block:
             a, b, c, d = struct.unpack("<4L", block[0:16])
             temp = xor_bytes([a, b, c, d], prev)
             encryptHelper(self.context, temp)
-            prev = temp
             ciphertext += struct.pack("<4L", *temp)
+            prev = temp
             block = block[16:]
             
         return ciphertext
