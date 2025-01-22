@@ -12,7 +12,7 @@ from . import models,schemas,utils
 from sqlalchemy.orm import Session
 from .database import engine,SessionLocal, get_db
 from app.cryptography import *
-from .routers import encdec,user
+from .routers import encdec,user,auth
 from fastapi.middleware.cors import CORSMiddleware
 
 models.Base.metadata.create_all(bind=engine)
@@ -32,6 +32,7 @@ templates = Jinja2Templates(directory="app/templates")
  
 app.include_router(encdec.router)
 app.include_router(user.router)
+app.include_router(auth.router)
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
@@ -52,4 +53,5 @@ while True:
 def testposts(db:Session = Depends(get_db)):
     posts=db.query(models.Post).all()
     return {"status":posts}
+
 
