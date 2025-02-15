@@ -427,17 +427,6 @@ def unpad(plaintext):
     assert all(p == padding_len for p in padding)
     return message
 
-# --------------------------------------------------------------
-# Generic bit-level primitives
-
-# Internally, we represent the numbers manipulated by the cipher in a
-# format that we call 'bitstring'. This is a string of "0" and "1"
-# characters containing the binary representation of the number in
-# little-endian format (so that subscripting with an index of i gives bit
-# number i, corresponding to a weight of 2^i). This representation is only
-# defined for nonnegative numbers (you can see why: think of the great
-# unnecessary mess that would result from sign extension, two's complement
-# and so on).  Example: 10 decimal is "0101" in bitstring format.
 
 def int_to_bytes(n, length):
   """Convert an integer to a byte array of a given length."""
@@ -491,10 +480,6 @@ def bytes_to_hexstring(b):
   """Convert a byte array to a hexstring."""
   return b.hex()
 
-
-# --------------------------------------------------------------
-# Format conversions
-
 def quadSplit(b128):
     """Take a 128-bit byte array and return it as a list of 4 32-bit
     byte arrays, least significant byte array first."""
@@ -524,12 +509,6 @@ r = 32
 # --------------------------------------------------------------
 # Data tables
 
-
-# Each element of this list corresponds to one S-box. Each S-box in turn is
-# a list of 16 integers in the range 0..15, without repetitions. Having the
-# value v (say, 14) in position p (say, 0) means that if the input to that
-# S-box is the pattern p (0, or 0x0) then the output will be the pattern v
-# (14, or 0xe).
 SBoxDecimalTable = [
 	[ 3, 8,15, 1,10, 6, 5,11,14,13, 4, 2, 7, 0, 9,12 ], # S0
 	[15,12, 2, 7, 9, 0, 5,10, 1,11,14, 8, 6,13, 3, 4 ], # S1
@@ -540,18 +519,7 @@ SBoxDecimalTable = [
 	[ 7, 2,12, 5, 8, 4, 6,11,14, 9, 1,15,13, 3,10, 0 ], # S6
 	[ 1,13,15, 0,14, 8, 2,11, 7, 4,12,10, 9, 3, 5, 6 ], # S7
     ] 
-# NB: in serpent-0, this was a list of 32 sublists (for the 32 different
-# S-boxes derived from DES). In the final version of Serpent only 8 S-boxes
-# are used, with each one being reused 4 times.
 
-
-# Make another version of this table as a list of dictionaries: one
-# dictionary per S-box, where the value of the entry indexed by i tells you
-# the output configuration when the input is i, with both the index and the
-# value being bitstrings.  Make also the inverse: another list of
-# dictionaries, one per S-box, where each dictionary gets the output of the
-# S-box as the key and gives you the input, with both values being 4-bit
-# bitstrings.
 SBoxBitstring = []
 SBoxBitstringInverse = []
 for line in SBoxDecimalTable:
@@ -565,10 +533,6 @@ for line in SBoxDecimalTable:
     SBoxBitstring.append(dict)
     SBoxBitstringInverse.append(inverseDict)
 
-# The Initial and Final permutations are each represented by one list
-# containing the integers in 0..127 without repetitions.  Having value v
-# (say, 32) at position p (say, 1) means that the output bit at position p
-# (1) comes from the input bit at position v (32).
 IPTable = [
     0, 32, 64, 96, 1, 33, 65, 97, 2, 34, 66, 98, 3, 35, 67, 99,
     4, 36, 68, 100, 5, 37, 69, 101, 6, 38, 70, 102, 7, 39, 71, 103,
@@ -591,11 +555,6 @@ FPTable = [
  ]
 
     
-# The Linear Transformation is represented as a list of 128 lists, one for
-# each output bit. Each one of the 128 lists is composed of a variable
-# number of integers in 0..127 specifying the positions of the input bits
-# that must be XORed together (say, 72, 144 and 125) to yield the output
-# bit corresponding to the position of that list (say, 1).
 LTTable = [
     [16, 52, 56, 70, 83, 94, 105],
     [72, 114, 125],
@@ -727,7 +686,6 @@ LTTable = [
     [32, 86, 99],
     ]
 
-# The following table is necessary for the non-bitslice decryption.
 LTTableInverse = [
     [53, 55, 72],
     [1, 5, 20, 90],
