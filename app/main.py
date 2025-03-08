@@ -14,6 +14,7 @@ from .database import engine,SessionLocal, get_db
 from app.cryptography import *
 from .routers import encdec,user,auth
 from fastapi.middleware.cors import CORSMiddleware
+from .settings import settings
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -40,7 +41,11 @@ async def read_root(request: Request):
 
 while True:
     try:
-        conn=psycopg2.connect(host='localhost',database='cryptobase',user='postgres',password='postgres',cursor_factory=RealDictCursor)
+        conn=psycopg2.connect(host=settings.POSTGRES_HOST,
+                              database=settings.POSTGRES_DB,
+                              user=settings.POSTGRES_USER,
+                              password=settings.POSTGRES_PASSWORD,
+                              cursor_factory=RealDictCursor)
         cursor=conn.cursor()
         print("Connected to DB")
         break
