@@ -24,3 +24,10 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     id:Optional[str] = None
+
+class ResetPasswordSchema(BaseModel):
+    token: str
+    new_password: str
+
+class Message(BaseModel):
+    message:str
