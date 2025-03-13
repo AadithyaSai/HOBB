@@ -59,4 +59,7 @@ def testposts(db:Session = Depends(get_db)):
     posts=db.query(models.Post).all()
     return {"status":posts}
 
+@app.get("/echo")
+def echo():
+    return {"status":"echo"}
 
