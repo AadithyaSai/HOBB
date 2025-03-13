@@ -3,7 +3,7 @@ from fastapi import FastAPI, Request, Response, status,HTTPException, Depends,AP
 from sqlalchemy.orm import Session
 from ..database import engine,SessionLocal, get_db
 from passlib.context import CryptContext
-from datetime import datetime
+from datetime import datetime, UTC
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -30,7 +30,7 @@ def get_user(id:int, db: Session = Depends(get_db)):
 
     return user
 
-@router.post("/forgot-password", response_class=schemas.Message)
+@router.post("/forgot-password", response_model=schemas.Message)
 def forgot_password(email: str, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.email == email).first()
     if not user:
@@ -52,11 +52,11 @@ def forgot_password(email: str, db: Session = Depends(get_db)):
     return {"message": "Password reset email sent"}
 
 
-@router.post("/reset-password", response_class=schemas.Message)
+@router.post("/reset-password", response_model=schemas.Message)
 def reset_password(data: schemas.ResetPasswordSchema, db: Session = Depends(get_db)):
     token_entry = db.query(models.PasswordResetToken).filter(models.PasswordResetToken.token == data.token).first()
 
-    if not token_entry or token_entry.expires_at < datetime.now(datetime.UTC):
+    if not token_entry or token_entry.expires_at < datetime.now(UTC).replace(tzinfo=None):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired token")
     
     # Update user password
