@@ -7,6 +7,11 @@ class Settings(BaseSettings):
     POSTGRES_HOST: str
     POSTGRES_PORT: str
     POSTGRES_URL: str
+    SMTP_SERVER: str
+    SMTP_PORT: str
+    SMTP_EMAIL: str
+    SMTP_PASSWORD: str
+    FRONTEND_URL: str
     
     model_config = SettingsConfigDict(env_file=".env")
 
